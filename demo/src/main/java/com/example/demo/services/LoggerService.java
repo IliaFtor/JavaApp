@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 public class LoggerService {
@@ -14,54 +15,53 @@ public class LoggerService {
     // Логирование успешного входа
     public void logLoginSuccess(String username) throws IOException {
         String logEntry = String.format(
-            "{\"timestamp\":\"%s\",\"event\":\"LOGIN_SUCCESS\",\"username\":\"%s\",\"message\":\"User logged in successfully\"}",
-            LocalDateTime.now().format(formatter), username
-        );
+                "{\"timestamp\":\"%s\",\"event\":\"LOGIN_SUCCESS\",\"username\":\"%s\",\"message\":\"User logged in successfully\"}",
+                LocalDateTime.now().format(formatter), username);
         writeLog(logEntry);
     }
 
     // Логирование неудачного входа
     public void logLoginFailure(String username, String reason) throws IOException {
         String logEntry = String.format(
-            "{\"timestamp\":\"%s\",\"event\":\"LOGIN_FAILURE\",\"username\":\"%s\",\"reason\":\"%s\",\"message\":\"Login attempt failed\"}",
-            LocalDateTime.now().format(formatter), username, reason
-        );
+                "{\"timestamp\":\"%s\",\"event\":\"LOGIN_FAILURE\",\"username\":\"%s\",\"reason\":\"%s\",\"message\":\"Login attempt failed\"}",
+                LocalDateTime.now().format(formatter), username, reason);
         writeLog(logEntry);
     }
 
     // Логирование регистрации
     public void logRegistration(String username) throws IOException {
         String logEntry = String.format(
-            "{\"timestamp\":\"%s\",\"event\":\"REGISTRATION\",\"username\":\"%s\",\"message\":\"New user registered\"}",
-            LocalDateTime.now().format(formatter), username
-        );
+                "{\"timestamp\":\"%s\",\"event\":\"REGISTRATION\",\"username\":\"%s\",\"message\":\"New user registered\"}",
+                LocalDateTime.now().format(formatter), username);
         writeLog(logEntry);
+    }
+
+    public String getLogsAsString() throws IOException {
+        //List<String> logs = readLogs(); // ваш существующий метод чтения логов
+        return null;
     }
 
     // Логирование смены пароля
     public void logPasswordChange(String username) throws IOException {
         String logEntry = String.format(
-            "{\"timestamp\":\"%s\",\"event\":\"PASSWORD_CHANGE\",\"username\":\"%s\",\"message\":\"User changed password\"}",
-            LocalDateTime.now().format(formatter), username
-        );
+                "{\"timestamp\":\"%s\",\"event\":\"PASSWORD_CHANGE\",\"username\":\"%s\",\"message\":\"User changed password\"}",
+                LocalDateTime.now().format(formatter), username);
         writeLog(logEntry);
     }
 
     // Логирование выхода
     public void logLogout(String username) throws IOException {
         String logEntry = String.format(
-            "{\"timestamp\":\"%s\",\"event\":\"LOGOUT\",\"username\":\"%s\",\"message\":\"User logged out\"}",
-            LocalDateTime.now().format(formatter), username
-        );
+                "{\"timestamp\":\"%s\",\"event\":\"LOGOUT\",\"username\":\"%s\",\"message\":\"User logged out\"}",
+                LocalDateTime.now().format(formatter), username);
         writeLog(logEntry);
     }
 
     // Логирование ошибок
     public void logError(String event, String username, String errorMessage) throws IOException {
         String logEntry = String.format(
-            "{\"timestamp\":\"%s\",\"event\":\"%s\",\"username\":\"%s\",\"error\":\"%s\",\"message\":\"System error occurred\"}",
-            LocalDateTime.now().format(formatter), event, username, errorMessage
-        );
+                "{\"timestamp\":\"%s\",\"event\":\"%s\",\"username\":\"%s\",\"error\":\"%s\",\"message\":\"System error occurred\"}",
+                LocalDateTime.now().format(formatter), event, username, errorMessage);
         writeLog(logEntry);
     }
 
@@ -75,7 +75,7 @@ public class LoggerService {
     // Просмотр логов
     public void showLogs() throws IOException {
         File file = new File(LOGS_FILE);
-        
+
         if (!file.exists()) {
             System.out.println("📭 Логов еще нет");
             return;

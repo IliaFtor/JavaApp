@@ -1,23 +1,29 @@
 package com.example.demo;
 
-//import com.example.demo.services.UserService;
-import com.example.demo.templates.ConsoleView;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
+
+import com.example.demo.templates.SwingGUIView;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.WebApplicationType;
 
 @SpringBootApplication
 public class DemoApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(DemoApplication.class, args);
+        new SpringApplicationBuilder(DemoApplication.class)
+                .headless(false)
+                .web(WebApplicationType.NONE) // Важно: отключаем веб-сервер
+                .run(args);
     }
 
     @Bean
-    public CommandLineRunner run(ConsoleView consoleView) {
+    public CommandLineRunner run(SwingGUIView swingGUIView) {
         return args -> {
-            consoleView.start();
+            System.out.println("CommandLineRunner executed - starting GUI");
+            swingGUIView.start();
         };
     }
 }

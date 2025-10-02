@@ -1,5 +1,6 @@
 package com.example.demo.controllers;
 
+import com.example.demo.DAO.fileManegerDao;
 import com.example.demo.models.User;
 import com.example.demo.services.UserService;
 import org.springframework.stereotype.Controller;
@@ -9,7 +10,7 @@ import java.io.IOException;
 
 @Controller
 public class AuthController {
-
+    private fileManegerDao iDao = new fileManegerDao();
     private final UserService userService;
 
     public AuthController(UserService userService) {
@@ -19,27 +20,27 @@ public class AuthController {
     // Простая форма регистрации
     @PostMapping("/register")
     public String register(@RequestParam String username,
-                          @RequestParam String email,
-                          @RequestParam String password) throws IOException {
-        
+            @RequestParam String email,
+            @RequestParam String password) throws IOException {
+
         // Генерируем ID (простая логика)
-        long newId = userService.getAllUsers().size() + 1L;
-        
+        long newId = iDao.getAllUsers().size() + 1L;
+
         User user = new User(newId, username, email, password, "USER");
-        userService.saveUser(user);
-        
+        iDao.saveUser(user);
+
         return "redirect:/login?registered=true";
     }
 
     // Простая форма логина
     @PostMapping("/login")
     public String login(@RequestParam String username,
-                       @RequestParam String password) throws IOException {
-        
+            @RequestParam String password) throws IOException {
+
         if (userService.validateUser(username, password)) {
             return "redirect:/dashboard?username=" + username;
         }
-        
+
         return "redirect:/login?error=true";
     }
 }
