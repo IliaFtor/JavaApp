@@ -1,102 +1,166 @@
 package com.example.demo.services;
 
-import org.springframework.stereotype.Service;
-
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+
+import org.springframework.stereotype.Service;
 
 @Service
 public class LoggerService {
+
     private static final String LOGS_FILE = "auth_logs.json";
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    // Логирование успешного входа
-    public void logLoginSuccess(String username) throws IOException {
-        String logEntry = String.format(
-                "{\"timestamp\":\"%s\",\"event\":\"LOGIN_SUCCESS\",\"username\":\"%s\",\"message\":\"User logged in successfully\"}",
-                LocalDateTime.now().format(formatter), username);
-        writeLog(logEntry);
+
+    public void info(String message, String username, String email) {
+        try {
+            String logEntry = String.format(
+                "{\"timestamp\":\"%s\",\"level\":\"INFO\",\"username\":\"%s\",\"email\":\"%s\",\"message\":\"%s\"}",
+                LocalDateTime.now().format(formatter),
+                username != null ? username : "N/A",
+                email != null ? email : "N/A",
+                message != null ? message : ""
+            );
+            writeLog(logEntry);
+        } catch (IOException e) {
+            System.err.println("Не удалось записать INFO-лог: " + e.getMessage());
+        }
     }
 
-    // Логирование неудачного входа
-    public void logLoginFailure(String username, String reason) throws IOException {
-        String logEntry = String.format(
-                "{\"timestamp\":\"%s\",\"event\":\"LOGIN_FAILURE\",\"username\":\"%s\",\"reason\":\"%s\",\"message\":\"Login attempt failed\"}",
-                LocalDateTime.now().format(formatter), username, reason);
-        writeLog(logEntry);
+    public void debug(String message, String detail) {
+        try {
+            String logEntry = String.format(
+                "{\"timestamp\":\"%s\",\"level\":\"DEBUG\",\"detail\":\"%s\",\"message\":\"%s\"}",
+                LocalDateTime.now().format(formatter),
+                detail != null ? detail : "N/A",
+                message != null ? message : ""
+            );
+            writeLog(logEntry);
+        } catch (IOException e) {
+            System.err.println("Не удалось записать DEBUG-лог: " + e.getMessage());
+        }
     }
 
-    // Логирование регистрации
-    public void logRegistration(String username) throws IOException {
-        String logEntry = String.format(
-                "{\"timestamp\":\"%s\",\"event\":\"REGISTRATION\",\"username\":\"%s\",\"message\":\"New user registered\"}",
-                LocalDateTime.now().format(formatter), username);
-        writeLog(logEntry);
+    public void warn(String message, String username) {
+        try {
+            String logEntry = String.format(
+                "{\"timestamp\":\"%s\",\"level\":\"WARN\",\"username\":\"%s\",\"message\":\"%s\"}",
+                LocalDateTime.now().format(formatter),
+                username != null ? username : "N/A",
+                message != null ? message : ""
+            );
+            writeLog(logEntry);
+        } catch (IOException e) {
+            System.err.println("Не удалось записать WARN-лог: " + e.getMessage());
+        }
     }
 
-    public String getLogsAsString() throws IOException {
-        //List<String> logs = readLogs(); // ваш существующий метод чтения логов
-        return null;
+    // --- Специфичные методы аудита ---
+
+    public void logLoginSuccess(String username) {
+        try {
+            logEvent("LOGIN_SUCCESS", username, null, "User logged in successfully");
+        } catch (IOException e) {
+            System.err.println("Ошибка логирования: " + e.getMessage());
+        }
     }
 
-    // Логирование смены пароля
-    public void logPasswordChange(String username) throws IOException {
-        String logEntry = String.format(
-                "{\"timestamp\":\"%s\",\"event\":\"PASSWORD_CHANGE\",\"username\":\"%s\",\"message\":\"User changed password\"}",
-                LocalDateTime.now().format(formatter), username);
-        writeLog(logEntry);
+    public void logLoginFailure(String username, String reason) {
+        try {
+            logEvent("LOGIN_FAILURE", username, reason, "Login attempt failed");
+        } catch (IOException e) {
+            System.err.println("Ошибка логирования: " + e.getMessage());
+        }
     }
 
-    // Логирование выхода
-    public void logLogout(String username) throws IOException {
-        String logEntry = String.format(
-                "{\"timestamp\":\"%s\",\"event\":\"LOGOUT\",\"username\":\"%s\",\"message\":\"User logged out\"}",
-                LocalDateTime.now().format(formatter), username);
-        writeLog(logEntry);
+    public void logRegistration(String username) {
+        try {
+            logEvent("REGISTRATION", username, null, "New user registered");
+        } catch (IOException e) {
+            System.err.println("Ошибка логирования: " + e.getMessage());
+        }
     }
 
-    // Логирование ошибок
-    public void logError(String event, String username, String errorMessage) throws IOException {
-        String logEntry = String.format(
-                "{\"timestamp\":\"%s\",\"event\":\"%s\",\"username\":\"%s\",\"error\":\"%s\",\"message\":\"System error occurred\"}",
-                LocalDateTime.now().format(formatter), event, username, errorMessage);
-        writeLog(logEntry);
+    public void logPasswordChange(String username) {
+        try {
+            logEvent("PASSWORD_CHANGE", username, null, "User changed password");
+        } catch (IOException e) {
+            System.err.println("Ошибка логирования: " + e.getMessage());
+        }
     }
 
-    // Запись лога в файл
+    public void logLogout(String username) {
+        try {
+            logEvent("LOGOUT", username, null, "User logged out");
+        } catch (IOException e) {
+            System.err.println("Ошибка логирования: " + e.getMessage());
+        }
+    }
+
+    public void logError(String event, String username, String errorMessage) {
+        try {
+            logEvent(event, username, errorMessage, "System error occurred");
+        } catch (IOException e) {
+            System.err.println("Ошибка логирования: " + e.getMessage());
+        }
+    }
+
+
+    private void logEvent(String event, String username, String extra, String message) throws IOException {
+        StringBuilder entry = new StringBuilder();
+        entry.append("{");
+        entry.append("\"timestamp\":\"").append(LocalDateTime.now().format(formatter)).append("\",");
+        entry.append("\"event\":\"").append(event).append("\",");
+        if (username != null) {
+            entry.append("\"username\":\"").append(username).append("\",");
+        }
+        if (extra != null) {
+            String key = event.equals("LOGIN_FAILURE") ? "reason" : 
+                         event.equals("ERROR") ? "error" : "detail";
+            entry.append("\"").append(key).append("\":\"").append(extra).append("\",");
+        }
+        entry.append("\"message\":\"").append(message).append("\"");
+        entry.append("}");
+        writeLog(entry.toString());
+    }
+
     private void writeLog(String logEntry) throws IOException {
         try (PrintWriter writer = new PrintWriter(new FileWriter(LOGS_FILE, true))) {
             writer.println(logEntry);
         }
     }
 
-    // Просмотр логов
-    public void showLogs() throws IOException {
+    public String getLogsAsString() throws IOException {
         File file = new File(LOGS_FILE);
-
         if (!file.exists()) {
-            System.out.println("📭 Логов еще нет");
-            return;
+            return "📭 Логов ещё нет";
         }
 
-        System.out.println("\n=== ПОСЛЕДНИЕ ЛОГИ ===");
+        StringBuilder sb = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new FileReader(LOGS_FILE))) {
             String line;
-            int count = 0;
-            while ((line = reader.readLine()) != null && count < 10) {
-                System.out.println(line);
-                count++;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
             }
+        }
+        return sb.toString().trim();
+    }
+
+    public void clearLogs() throws IOException {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(LOGS_FILE))) {
         }
     }
 
-    // Очистка логов
-    public void clearLogs() throws IOException {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(LOGS_FILE))) {
-            writer.print("");
-        }
-        System.out.println("✅ Логи очищены");
+    public void logDebug(String category, String message) {
+    try {
+        String logEntry = String.format(
+            "{\"timestamp\":\"%s\",\"level\":\"DEBUG\",\"category\":\"%s\",\"message\":\"%s\"}",
+            LocalDateTime.now().format(formatter), category, message);
+        writeLog(logEntry);
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+
+}
 }

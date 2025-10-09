@@ -1,46 +1,44 @@
 package com.example.demo.controllers;
 
-import com.example.demo.DAO.fileManegerDao;
-import com.example.demo.models.User;
 import com.example.demo.services.UserService;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 public class AuthController {
-    private fileManegerDao iDao = new fileManegerDao();
+
     private final UserService userService;
 
     public AuthController(UserService userService) {
         this.userService = userService;
     }
 
-    // Простая форма регистрации
     @PostMapping("/register")
     public String register(@RequestParam String username,
-            @RequestParam String email,
-            @RequestParam String password) throws IOException {
-
-        // Генерируем ID (простая логика)
-        long newId = iDao.getAllUsers().size() + 1L;
-
-        User user = new User(newId, username, email, password, "USER");
-        iDao.saveUser(user);
-
-        return "redirect:/login?registered=true";
+                           @RequestParam String email,
+                           @RequestParam String password,
+                           RedirectAttributes redirectAttributes) {
+        try {
+            userService.registerUser(username, email, password);
+            redirectAttributes.addFlashAttribute("message", "Регистрация прошла успешно!");
+            
+            return "redirect:/login";
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/register";
+        }
     }
 
-    // Простая форма логина
     @PostMapping("/login")
     public String login(@RequestParam String username,
-            @RequestParam String password) throws IOException {
-
+                        @RequestParam String password,
+                        RedirectAttributes redirectAttributes) {
         if (userService.validateUser(username, password)) {
             return "redirect:/dashboard?username=" + username;
         }
-
-        return "redirect:/login?error=true";
+        redirectAttributes.addFlashAttribute("error", "Неверный логин или пароль");
+        return "redirect:/login";
     }
 }
